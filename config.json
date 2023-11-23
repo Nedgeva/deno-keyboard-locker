@@ -1,0 +1,6 @@
+{
+  "keyword": "unlock",
+  "modifiers": ["MOD_CONTROL", "MOD_ALT"],
+  "key": "VK_KEY_L",
+  "hotkeyLatchDelayMs": 200
+}
