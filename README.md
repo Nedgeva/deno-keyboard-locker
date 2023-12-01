@@ -1,8 +1,8 @@
-<span style="display:block;text-align:center">
+<p align="center">
   <img src="logo.png" width="350" title="hover text">
-</span>
+</p>
 
-<h1 style="text-align: center; font-weight: bold;">Deno Keyboard Locker</h1>
+<h1 align="center" style="font-weight: bold;">Deno Keyboard Locker</h1>
 
 ## What?
 Handy keyboard locker for Windows written in Typescript specifically for Deno runtime.
