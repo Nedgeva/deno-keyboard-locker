@@ -1,4 +1,40 @@
 import { path } from '../deps.ts';
+import {
+	EXIT_MENU_ID,
+	IMAGE_ICON,
+	LR_LOADFROMFILE,
+	MF_STRING,
+	MSG_SIZE,
+	NIF_ICON,
+	NIF_MESSAGE,
+	NIF_TIP,
+	NIM_ADD,
+	NIM_DELETE,
+	NIM_MODIFY,
+	NOTIFYICONDATAW_SIZE,
+	PM_REMOVE,
+	POINT_SIZE,
+	TPM_RIGHTBUTTON,
+	TRAY_CALLBACK_MESSAGE,
+	TRAY_ICON_ID,
+	WM_COMMAND,
+	WM_DESTROY,
+	WM_LBUTTONUP,
+	WM_NULL,
+	WM_RBUTTONUP,
+	WNDCLASSEXW_SIZE,
+} from '../core/constants.ts';
+import { getKernel32, getShell32, getUser32 } from '../core/hooks.ts';
+import {
+	createBuffer,
+	lowWord,
+	setI32,
+	setPtr,
+	setU32,
+	toWide,
+	wideToBytes,
+	writeWideInPlace,
+} from '../utils/buffer.utils.ts';
 
 const POINTER_SIZE = 8;
 
@@ -10,207 +46,9 @@ if (POINTER_SIZE !== 8) {
 	throw new Error('This tray implementation currently supports 64-bit only.');
 }
 
-const WM_NULL = 0x0000;
-const WM_APP = 0x8000;
-const WM_COMMAND = 0x0111;
-const WM_DESTROY = 0x0002;
-const WM_LBUTTONUP = 0x0202;
-const WM_RBUTTONUP = 0x0205;
-const PM_REMOVE = 0x0001;
-
-const NIM_ADD = 0x00000000;
-const NIM_MODIFY = 0x00000001;
-const NIM_DELETE = 0x00000002;
-const NIF_MESSAGE = 0x00000001;
-const NIF_ICON = 0x00000002;
-const NIF_TIP = 0x00000004;
-
-const IMAGE_ICON = 1;
-const LR_LOADFROMFILE = 0x00000010;
-const MF_STRING = 0x00000000;
-const TPM_RIGHTBUTTON = 0x0002;
-
-const TRAY_CALLBACK_MESSAGE = WM_APP + 1;
-const EXIT_MENU_ID = 1001;
-const TRAY_ICON_ID = 1;
-
-const NOTIFYICONDATAW_SIZE = 976;
-const WNDCLASSEXW_SIZE = 80;
-const MSG_SIZE = 48;
-const POINT_SIZE = 8;
-const createBuffer = (size: number) => new Uint8Array(new ArrayBuffer(size));
-
-const toWide = (value: string): Uint16Array => {
-	const wide = new Uint16Array(value.length + 1);
-	for (let i = 0; i < value.length; i++) {
-		wide[i] = value.charCodeAt(i);
-	}
-	wide[value.length] = 0;
-	return wide;
-};
-
-const setU32 = (buf: Uint8Array, offset: number, value: number) => {
-	new DataView(buf.buffer).setUint32(offset, value, true);
-};
-
-const setI32 = (buf: Uint8Array, offset: number, value: number) => {
-	new DataView(buf.buffer).setInt32(offset, value, true);
-};
-
-const setU64 = (buf: Uint8Array, offset: number, value: bigint) => {
-	new DataView(buf.buffer).setBigUint64(offset, value, true);
-};
-
-const setPtr = (
-	buf: Uint8Array,
-	offset: number,
-	value: Deno.PointerValue | null,
-) => {
-	setU64(
-		buf,
-		offset,
-		value ? Deno.UnsafePointer.value(value) : 0n,
-	);
-};
-
-const lowWord = (value: bigint): number => Number(value & 0xffffn);
-
-const wideToBytes = (wide: Uint16Array): Uint8Array => {
-	const bytes = createBuffer(wide.length * 2);
-	const view = new DataView(bytes.buffer);
-	for (let i = 0; i < wide.length; i++) {
-		view.setUint16(i * 2, wide[i], true);
-	}
-	return bytes;
-};
-
-const writeWideInPlace = (
-	buf: Uint8Array,
-	offset: number,
-	maxChars: number,
-	value: string,
-) => {
-	const text = toWide(value);
-	const view = new DataView(
-		buf.buffer,
-		buf.byteOffset + offset,
-		maxChars * 2,
-	);
-	for (let i = 0; i < maxChars; i++) {
-		const unit = i < text.length ? text[i] : 0;
-		view.setUint16(i * 2, unit, true);
-	}
-};
-
-const user32 = Deno.dlopen('user32.dll', {
-	RegisterClassExW: {
-		parameters: ['buffer'],
-		result: 'u16',
-	},
-	CreateWindowExW: {
-		parameters: [
-			'u32',
-			'buffer',
-			'buffer',
-			'u32',
-			'i32',
-			'i32',
-			'i32',
-			'i32',
-			'pointer',
-			'pointer',
-			'pointer',
-			'pointer',
-		],
-		result: 'pointer',
-	},
-	DefWindowProcW: {
-		parameters: ['pointer', 'u32', 'usize', 'isize'],
-		result: 'isize',
-	},
-	CreatePopupMenu: {
-		parameters: [],
-		result: 'pointer',
-	},
-	AppendMenuW: {
-		parameters: ['pointer', 'u32', 'usize', 'buffer'],
-		result: 'bool',
-	},
-	TrackPopupMenu: {
-		parameters: [
-			'pointer',
-			'u32',
-			'i32',
-			'i32',
-			'i32',
-			'pointer',
-			'pointer',
-		],
-		result: 'bool',
-	},
-	SetForegroundWindow: {
-		parameters: ['pointer'],
-		result: 'bool',
-	},
-	GetCursorPos: {
-		parameters: ['buffer'],
-		result: 'bool',
-	},
-	PeekMessageW: {
-		parameters: ['buffer', 'pointer', 'u32', 'u32', 'u32'],
-		result: 'bool',
-	},
-	TranslateMessage: {
-		parameters: ['buffer'],
-		result: 'bool',
-	},
-	DispatchMessageW: {
-		parameters: ['buffer'],
-		result: 'isize',
-	},
-	DestroyMenu: {
-		parameters: ['pointer'],
-		result: 'bool',
-	},
-	DestroyWindow: {
-		parameters: ['pointer'],
-		result: 'bool',
-	},
-	PostQuitMessage: {
-		parameters: ['i32'],
-		result: 'void',
-	},
-	LoadImageW: {
-		parameters: ['pointer', 'buffer', 'u32', 'i32', 'i32', 'u32'],
-		result: 'pointer',
-	},
-	DestroyIcon: {
-		parameters: ['pointer'],
-		result: 'bool',
-	},
-	PostMessageW: {
-		parameters: ['pointer', 'u32', 'usize', 'isize'],
-		result: 'bool',
-	},
-	UnregisterClassW: {
-		parameters: ['buffer', 'pointer'],
-		result: 'bool',
-	},
-});
-
-const shell32 = Deno.dlopen('shell32.dll', {
-	Shell_NotifyIconW: {
-		parameters: ['u32', 'buffer'],
-		result: 'bool',
-	},
-});
-
-const kernel32 = Deno.dlopen('kernel32.dll', {
-	GetModuleHandleW: {
-		parameters: ['pointer'],
-		result: 'pointer',
-	},
-});
+const user32 = getUser32();
+const shell32 = getShell32();
+const kernel32 = getKernel32();
 
 const classNameW = toWide('KeyboardLockerTrayWindow');
 const windowNameW = toWide('KeyboardLockerTrayWindow');

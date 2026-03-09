@@ -3,6 +3,36 @@ export const WM_KEYDOWN = 0x0100;
 export const WM_KEYUP = 0x0101;
 export const WH_KEYBOARD_LL = 13;
 
+export const WM_NULL = 0x0000;
+export const WM_APP = 0x8000;
+export const WM_COMMAND = 0x0111;
+export const WM_DESTROY = 0x0002;
+export const WM_LBUTTONUP = 0x0202;
+export const WM_RBUTTONUP = 0x0205;
+export const PM_REMOVE = 0x0001;
+
+export const NIM_ADD = 0x00000000;
+export const NIM_MODIFY = 0x00000001;
+export const NIM_DELETE = 0x00000002;
+export const NIF_MESSAGE = 0x00000001;
+export const NIF_ICON = 0x00000002;
+export const NIF_TIP = 0x00000004;
+
+export const IMAGE_ICON = 1;
+export const LR_LOADFROMFILE = 0x00000010;
+export const MF_STRING = 0x00000000;
+export const TPM_RIGHTBUTTON = 0x0002;
+
+export const TRAY_CALLBACK_MESSAGE = WM_APP + 1;
+export const EXIT_MENU_ID = 1001;
+export const TRAY_ICON_ID = 1;
+
+export const NOTIFYICONDATAW_SIZE = 976;
+export const WNDCLASSEXW_SIZE = 80;
+export const MSG_SIZE = 48;
+export const POINT_SIZE = 8;
+
+
 export const MODIFIERS = {
 	MOD_ALT: 1,
 	MOD_CONTROL: 2,
