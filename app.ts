@@ -36,11 +36,25 @@ const spawnKeyboardWatcher = (keyword: string) =>
 	spawnProcess('standalone/watch-keyboard-hook.ts', [keyword]);
 
 const app = async () => {
-	const systray = await createNewSystray();
+	let currentChild: Deno.ChildProcess | undefined;
+
+	const exitApp = () => {
+		if (currentChild) {
+			try {
+				currentChild.kill('SIGKILL');
+			} catch {
+				// ignore if already exited
+			}
+		}
+		console.log('Exiting...');
+		Deno.exit();
+	};
+
+	const systray = await createNewSystray({ onExit: exitApp });
 
 	Deno.addSignalListener('SIGINT', () => {
 		console.log('interrupted!');
-		Deno.exit();
+		exitApp();
 	});
 
 	const config = await parseConfig('./config.json');
@@ -60,9 +74,10 @@ const app = async () => {
 
 		await systray.setStatus(locked);
 
-		const { code, stdout, stderr } = await cp.output();
+		currentChild = cp.spawn();
+		const { code, stdout, stderr } = await currentChild.output();
 
-		if (code !== 0) {
+		if (code !== 0 && code !== 1) { // 1 might be a normal termination from exit code or kill
 			console.error('Non zero exit code!');
 			console.log(new TextDecoder().decode(stdout));
 			console.log(new TextDecoder().decode(stderr));
