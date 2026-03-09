@@ -32,7 +32,6 @@ export const WNDCLASSEXW_SIZE = 80;
 export const MSG_SIZE = 48;
 export const POINT_SIZE = 8;
 
-
 export const MODIFIERS = {
 	MOD_ALT: 1,
 	MOD_CONTROL: 2,

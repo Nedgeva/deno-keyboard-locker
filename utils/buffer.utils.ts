@@ -1,4 +1,5 @@
-export const createBuffer = (size: number) => new Uint8Array(new ArrayBuffer(size));
+export const createBuffer = (size: number) =>
+	new Uint8Array(new ArrayBuffer(size));
 
 export const toWide = (value: string): Uint16Array => {
 	const wide = new Uint16Array(value.length + 1);

@@ -194,7 +194,11 @@ export const createNewSystray = (options?: { onExit?: () => void }) => {
 	setPtr(wndClass, 40, null);
 	setPtr(wndClass, 48, null);
 	setPtr(wndClass, 56, null);
-	setPtr(wndClass, 64, Deno.UnsafePointer.of(classNameBuffer as BufferSource));
+	setPtr(
+		wndClass,
+		64,
+		Deno.UnsafePointer.of(classNameBuffer as BufferSource),
+	);
 	setPtr(wndClass, 72, null);
 
 	const atom = user32.symbols.RegisterClassExW(wndClass);
@@ -258,7 +262,11 @@ export const createNewSystray = (options?: { onExit?: () => void }) => {
 		}
 
 		try {
-			updateNotifyIcon(hWnd, nextIcon, currentIcon ? NIM_MODIFY : NIM_ADD);
+			updateNotifyIcon(
+				hWnd,
+				nextIcon,
+				currentIcon ? NIM_MODIFY : NIM_ADD,
+			);
 		} catch (error) {
 			user32.symbols.DestroyIcon(nextIcon);
 			throw error;
@@ -296,7 +304,10 @@ export const createNewSystray = (options?: { onExit?: () => void }) => {
 		}
 		user32.symbols.DestroyWindow(hWnd);
 		hWnd = null;
-		user32.symbols.UnregisterClassW(classNameBuffer as BufferSource, hInstance);
+		user32.symbols.UnregisterClassW(
+			classNameBuffer as BufferSource,
+			hInstance,
+		);
 		wndProc.close();
 	};
 

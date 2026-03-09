@@ -72,7 +72,7 @@ const app = async () => {
 
 		console.log(locked ? 'Locked' : 'Unlocked');
 
-		await systray.setStatus(locked);
+		systray.setStatus(locked);
 
 		currentChild = cp.spawn();
 		const { code, stdout, stderr } = await currentChild.output();
